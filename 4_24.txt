@@ -1,0 +1,28 @@
+docker run -t -i --name "컨테이너 이름" ubuntu:20.04 = 컨테이너 생성
+
+docker run -t -i --name "컨테이너 이름" -p 80:80 ubuntu:20.04 = 아파치 웹 서버 포트(80)와 컨테이너 포트(80) 연결
+*호스트 포트와 컨테이너 포트 불일치시 연결 및 접속 불가능
+
+-p옵션은 컨테이너 포트와 호스트 포트를 바인딩 명령어
+
+80:88 에서 80은 호스트 포트 88은 컨테이너 포트
+
+docker run -t -i --name "컨테이너 이름" -p xxx.xxx.x.xxx:7777:80 ubuntu:20.04 = 특정 호스트 아이피를 사용할경우
+
+apt-get install apache2 -y = 아파치 설치
+
+service apache2 start = 아파치 시작
+
+도커는 한 컨테이너에 하나의 프로세스만 실행하는 것을 권장 ( 데이터베이스 따로, 웹서버 따로)
+
+docker run -d --name wordpressdb -e MYSQL_ROOT_PASSWORD=password -e MYSQL_DATABASE=wordpress mysql:5.7
+ --> mysql 이미지를 사용해 db컨테이너 생성
+
+docker run -d -e WORDPRESS_DB_HOST=mysql -e WORDPRESS_DB_USER=root -e WORDPRESS_DB_PASSWORD=password --name wordpress --link wordpressdb:mysql -p 80 wordpress
+--> 워드프레스 이미지를 사용해 웹서버 컨테이너 생성
+
+run -d = 데몬, 컨테이너가 백그라운드로 실행
+
+run -e = 환경 변수 설정
+
+docker prot "컨테이너 이름" = 호스트와 바인딩된(묶인) 포트만 확인 
