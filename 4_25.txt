@@ -1,0 +1,26 @@
+gedit = 메모장 기능
+52 shift + g = 해당 라인 보기
+ docker images = 도커 이미지 목록 조회
+
+run -d 옵션은 일반 컨테이너 생성시 입출력이 없는 상태로 컨테이너를 실행 -> 다시시작 실행 불가
+		  mysql 컨테이너 생성시에는 mysqld가 동작하도록 설정
+
+exec ~~ /bin/bash = 컨테이너 내부 쉘 사용 가능(db컨테이너에서)
+
+----
+
+호스트와 볼륨 공유(데이터 영속적 활용->★컨테이너간 데이터 공유) -v옵션
+
+docker run -d --name wordpressdb_hostvolume -e MYSQL_ROOT_PASSWORD=password -e MYSQL_DATABASE=wordpress -v /home/wordpress_db:/var/lib/mysql mysql:5.7
+
+docker run -d -e WORDPRESS_DB_PASSWORD=password --name wordpress_hostvolume --link wordpressdb_hostvolume:mysql -p 80 wordpress
+= 호스트 디렉터리와 컨테이너 디렉터리를 공유
+
+docker volume create --name "볼륨명" = 볼륨 생성
+
+docker volume ls = 볼륨 리스트 조회
+
+docker inspect --type volume "볼륨명" = 볼륨 상세 정보 조회
+
+docker volume prune = 볼륨 일괄 삭제
+
