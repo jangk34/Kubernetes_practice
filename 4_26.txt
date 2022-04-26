@@ -1,0 +1,154 @@
+[ 도커 네트워크 ]
+
+컨테이너의 eth0 인터페이스는 호스트의 veth라는 인터페이스와 연결,   veth는 docker0 브리지와 바인딩돼 외부와 통신
+
+eht0 = 실제 외부와 통신 가능한 호스트의 네트워크 인터페이스 
+
+veth(Virtual Ethnet Interface) = 가상 네트워크 인터페이스
+
+docker0 = 각각의 veth 인터페이스와 바인딩돼 호스트의 eth0 인터페이스와 이어주는 역할
+
+----
+
+docker network ls =  도커 네트워크 목록조회
+
+docker network inspect "네트워크명" = 네트워크 상세 정보 출력
+
+docker network create --driver bridge "네트워크명" = 새로운 브리지 네트워크 생성
+
+docker run -i -t --namdide "컨테이너명" --net "네트워크명" ubuntu:18.04 = 특정 네트워크를 사용하도록 하는 컨테이너 생성
+
+docker network connect "네트워크명" "컨테이너명" = 특정 네트워크 연결
+
+docker network disconnect "네트워크명" "컨테이너명" = 특정 네트워크 연결해제
+
+docker network create --driver=bridge --subnet=172.72.0.0/16 --ip-range=172.72.0.0/24 --gateway=172.72.0.1 "네트워크명"  = 임의 주소로 생성
+
+docker run -it --name "컨테이너명" --net host ubuntu:18.04  = host네트워크를 사용하는 컨테이너 생성
+
+docker run -itd --name network_container_1 ubuntu:18.04
+
+docker run -itd --name network_container_2 --net container:network_container_1 ubuntu:18.04
+
+docker exec "컨테이너명" ifconfig = 네트워크 정보(아이피) 조회 
+docker inspect network_alias_container1 | grep IPAddress = 네트워크 정보(아이피) 조회
+
+apt-get install iputils-ping = ping테스트 구축
+
+apt-get install dnsutils = DNS로 도메인 이름에 대응하는 IP를 조회할때 쓰는 도구 ( dig 명령어 )를 위한 구축 명령어
+dig "호스트이름" = 호스트 이름이 반환되는 IP확인
+
+----
+
+★[ 컨테이너 로깅 ] -- 추후 다시 볼 것
+
+docker logs "컨테이너명" = 해당 컨테이너 로그 조회
+
+docker logs --tail 2 "컨테이너명" = 해당 컨테이너 로그 조회시 끝에서 2줄만 조회
+
+docker logs -f -t "컨테이너명" = 실시간 로그 조회
+
+rsyslog 서버 설정
+먼저 rsyslog를 위한 서버를 만들도록 하겠습니다.
+
+[ rsyslog ]
+
+$ docker run -i -t --name rsyslog_server \      # --name : 컨테이너 이름
+> -h rsyslog \                                  # -h : 컨테이너의 호스트네임
+> -p 514:514 -p 514:514/udp \                   # -p : 포트 포워딩, tcp/udp전부 514포트 열어놓기
+> ubuntu:14.04
+/etc/rsyslog.conf에 들어가서 아래 내용에 해당하는 주석을 제거합니다.
+
+root@rsyslog:/# vi /etc/rsyslog.conf
+
+#################
+#### MODULES ####
+#################
+
+$ModLoad imuxsock # provides support for local system logging
+$ModLoad imklog   # provides kernel logging support
+#$ModLoad immark  # provides --MARK-- message capability
+
+# provides UDP syslog reception
+$ModLoad imudp                         # 여기 주석(='#')이 있었는데 제거
+$UDPServerRun 514                      # 여기 주석(='#')이 있었는데 제거
+
+# provides TCP syslog reception
+$ModLoad imtcp                         # 여기 주석(='#')이 있었는데 제거
+$InputTCPServerRun 514                 # 여기 주석(='#')이 있었는데 제거
+서비스 재시작
+
+root@rsyslog:/# service rsyslog restart
+ * Stopping enhanced syslogd rsyslogd                     [ OK ]
+ * Starting enhanced syslogd rsyslogd                     [ OK ]
+
+[ 컨테이너 자원 할당 제한 ]
+
+docker inpect "컨테이너명" = 설정된 자원 제한 확인
+
+docker run -d --memory="1g" --name "컨테이너명" "이미지명" = 컨테이너 메모리 제한
+
+## docker run -it --name "컨테이너명" --cpu-shares 1024 ubuntu:18.04 = 컨테이너 가중치 설정해 해당 컨테이너가 cpu를 얼마나 사용할지 
+## *1024는 cpu 1의 비중 
+
+## apt-get install stress = cpu와 메모리에 과부하를 줘서 성능을 테스트
+
+## docker run -d --name cpu_1024 --cpu-shares 1024 alicek106/stress stress --cpu 1
+
+## docker run -d --name cpu_512 --cpu-shares 512 alicek106/stress stress --cpu 1
+
+[ 도커 이미지 생성 / 추출 / 배포 ]
+
+docker search "이미지명" = 도커엔진에서 이미지 검색
+
+dokcer images = 이미지 생성목록 확인
+
+docker commit [OPTION] CONTAINER [REPOSITORY[:TAG]] = 컨테이너를 이미지로 만드는 작업
+
+docker commit -a "alicek106" -m "my first commit" commit_test commit_test:first = 이미지가 first(태그명), 이름이 commit_test(자동으로 latest 이름 설정), 메시지가 my fi~,
+ -a옵션은 이미지의 작성자를 나타내는 메타데이터를 이미지에 포함, 이미지의 작성자 데이터는 "alicek106"
+
+★★ inspect 명령어
+컨테이너,네트워크,볼륨,이미지 등 모든 도커 단위의 정보를 얻을 때 사용
+
+docker rmi "이미지명:태그" = 이미지에 부여된 이름만 삭제
+
+docker save -o 이미지명.tar "이미지명:태그" = 추출 이미지 하나의 파일로 추출
+
+docker load -i 이미지명.tar = 이미지 불러오기
+
+또는 
+
+docker export -o 이미지명.tar 컨테이너파일시스템명
+docker import  이미지명.tar 이미지명:태그
+
+[ 도커 허브 ]
+
+1. 도커허브에서 저장소 생성
+
+2. docker run -it --name commit_container1 ubuntu:18.04
+
+echo my first push >> test                     # 변경사항 만들기
+
+3. docker commit commit_container1 jangk34/my-image-name:0.0
+
+# docker tag my-image-name:0.0 jangk34/my-image-name:0.0      이미지의 이름 추가 but,  기존 이름 삭제 x, 같은 이미지를 가리키는 새로운 이름 추가
+
+4. docker push jangk34/이미지명:태그 
+<-> docker pull jangk34/이미지명:태그 
+
+docker run -d --name myregistry -p 5000:5000 --restart=always registry:2.6 = 사설 레지스트리 컨테이너 생성
+
+docker localhost:5000/v2/ = 레지스트리 컨테이너 동작유무 확인 -> {} 정상
+
+
+
+
+
+
+
+
+
+
+
+
