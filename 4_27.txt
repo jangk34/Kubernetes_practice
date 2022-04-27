@@ -1,0 +1,11 @@
+[ Nginx 레지스트리 접속 ]
+
+apt-get install apache2-utils = 개인 계정과 비밀번호를 저장하는 파일 생성 툴 설치
+
+htpasswd -c httpasswd "이름"
+
+mv htpasswd certs/
+
+docker ps --format "table {{.ID}}\t{{.Image}}\t{{.Ports}}"
+
+hostname -i = 호스트 아이피 확인
