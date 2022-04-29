@@ -1,0 +1,58 @@
+find / -name "main.go" = main.go 라는 파일 찾기 (디렉터리도)
+
+
+★★ !!! 중요 [ 도커 개인 이미지 생성 / dockerfile 빌드 복습 ]
+
+Dockerfile 이란 컨테이너의 바탕이 되는 이미지를 생성하는 파일
+
+1. Docker파일 설정 ( 실행할 명령들  파일 내부에 삽입)
+
+2. docker build -t 이미지명:태그명 = 이미지 생성
+주의 -> docker build -t "생성할 이미지명:태그명" "Dockerfile위치" = 임의의 이미지 생성
+
+3. docker run ~ --name "컨테이너명" "2번에서 만든 이미지" = 2번에서 만든 개인 이미지로 컨테이너 생성
+
+4. 3번에서 만든 컨테이너 실행 시 1번 내부의 내용들 실행
+
+
+*** 빌드 오류시 환경변수(Dockerfile에 추가)
+ARG DEBIAN_FRONTEND=noninteractive
+
+Dockerfile이란?
+Docker 이미지 설정 파일
+
+Docker에서 Dockerfile이라는 설정 파일을 읽게끔 설정이 되어있음
+
+                 
+도커는 서버로서의 도커와 클라이언트로서의 도커로 나뉨
+[ 도커 데몬 ] 
+= 도커 엔진은 외부에서 API입력을 받아 도커 엔진의 기능을 수행하는데, 도커 프로세스가 실행되어 서버로서 입력을 받을 준비가 된 상태를 도커 데몬이라고 함
+
+정리 = 도커 데몬은 API입력을 받아 도커 엔진의 기능을 수행 / 도커 클라이언트는 이 API를 사용할 수 있도록 CLI(Command Line Interfece)를 제공
+순서 = 도커 명령어 입력(도커 클라이언트 사용하는것 ) ->도커 데몬에게 명령어 전달 -> 도커 데몬은 명령어 파싱(해석)하고 수행 -> 수행 결과를 클라이언트에 반환하고 결과 출력
+
+
+which docker = 도커 명령어의 파일이 위치한 경로 출력
+ps aux | grep docker = 실행중인 도커 프로세스 목록
+
+service docker start
+service docker stop
+
+systemctl enable stop  = 도커 자동 실행(레드햇만, 우분투는 자동실행)
+
+-H옵션은 도커 데몬의 API를 사용할 수 있는 방법 추가
+dockerd -H unix:///var/run/docker.sock = dockerd 
+dockerd -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375 = -> 도커 데몬을 제어함과 동시에 도커 클라이언트 사용(도커 클라이언트를 위한 유닉스 소켓 과 Remote API를 위한 바인딩 주소를 동시에 설정)
+
+## nginx 컨테이너를 detach 상태로 생성하고 시작하는 예
+client = docker.DockerClient(base_url='unix://var/run/docker.sock')
+
+import docker
+
+client = docker.DockerClient(base_url='unix://var/run/docker.sock')
+container = client.containers.run('nginx',
+                                   detach=True,
+                                   ports={'80/tcp':80})
+print("Created container is : {}, {}".format(container.name, container.id))
+~
+
