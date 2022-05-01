@@ -1,0 +1,52 @@
+[ 도커 컴포즈 docker compose 란 ]
+
+docker-compose.yml -> 프로젝트 -> 1서비스 -> 여러개의 컨테이너
+                                           -> 2서비스 -> 여러개의 컨테이너
+
+[ docker-compose.yml ] ## 파일을 저장한 디렉터리(프로젝트) 명을 따른다.
+
+version: '3.0'
+services:  ## 생성될 컨테이너들을 묶어놓은 단위
+        web: # 컨테이너 생성시 서비스의 이름
+                image: alicek106/composetest:web # 컨테이너 생성시 쓰일 이미지 이름
+                ports: # 개방할 포트를 설정
+                        - "80:80"
+                links: # docker run의 --link와 같음, 다른 서비스에 서비스명만으로 접근 할 수 있도록 설정
+                        - mysql:db
+                command: apachectl -DFOREGROUD # command는 컨테이너가 실행될 때 수행할 명령어 설정
+        mysql: # 생성될 서비스 이름
+                image: alicek106/composetest:mysql
+                command: mysqld
+
+++ environment : # 환경변수
+	- MYSQL_ROOT_PASSWORD=mypassword
+++ depends_on: # 특정 컨테이너에 대한 의존 관계, 이 항목에 명시된 컨테이너가 먼저 생성
+	- mysql 
+++ build : ./composetest = Dockerfile 이미지를 빌드해 서비스 컨테이너를 생성
+++ extends = 다른 yaml 파일이나 현재 yaml 파일에서 서비스 속성을 상속받게 설정
+
+
+
+
+
+docker-compse scale myslq =2 -> 특정 서비스의 2번이라는 이름을 가진 동일 컨테이너 추가로 만들기
+
+docker-compose up -d mysql = 특정  서비스의 컨테이너만 생성
+
+docker-compose down = 생성된 프로젝트들 정지시킨후 삭제+
+
+docker-compose -p "디렉터리(프로젝트)이름" up -d = 특정 디렉터리 명으로 컨테이너 생성
+
+docker-compose -p "디렉터리(프로젝트)이름" down = 특정 디렉터리 명으로 생성된 컨테이너 정지후 삭제
+
+docker-compose \
+-f /root/alicek106/my_compose_file.yml \                = -f 옵션을 사용해 yml 파일 위치와 이름을 지정할수 있음
+up -d
+
+docker-compose up --no-deps web = 특정 서비스의 컨테이너만 생성하되 의존성이 없는 컨테이너 생성
+
+docker-compose config = yaml파일 검증(오타,파일포맷이 적절한지등 )
+docker-compose -f (yml파일경로) config = 검사할 파일의 경로 설정
+ 
+
+도커파일 빌드 = 명령어실행 ? vs 도커컴포즈 = 컨테이너 실행 ?
