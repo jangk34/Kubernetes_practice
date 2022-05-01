@@ -49,4 +49,4 @@ docker-compose config = yaml파일 검증(오타,파일포맷이 적절한지등
 docker-compose -f (yml파일경로) config = 검사할 파일의 경로 설정
  
 
-도커파일 빌드 = 명령어실행 ? vs 도커컴포즈 = 컨테이너 실행 ?
+도커파일 빌드 = 명령어실행 ? vs 도커컴포즈 = 여러개의 컨테이너 생성 및 실행 ?
