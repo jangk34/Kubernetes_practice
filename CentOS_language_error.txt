@@ -1,0 +1,8 @@
+entOS7 vi상 한글 깨질때 ] 
+
+locale 
+
+localedef -c -i ko_KR -f UTF-8 ko_KR.UTF-8 
+localectl set-locale LANG=ko_KR.UTF-8
+
+
