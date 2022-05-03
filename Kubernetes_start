@@ -1,0 +1,22 @@
+
+[도커 실행]
+stemctl daemon-reload
+
+systemctl enable --now docker
+
+[쿠버네티스 실행]
+systemctl enable --now kubelet
+
+[x509 에러시]
+unset KUBECONFIG
+export KUBECONFIG=/etc/kubernetes/admin.conf
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+다시 
+
+[쿠버네티스 실행]
+systemctl enable --now kubelet
+
+kubectl get nodes
