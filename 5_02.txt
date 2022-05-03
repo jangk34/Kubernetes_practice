@@ -1,0 +1,134 @@
+kube, kubectl 설치 ]
+
+curl -Lo minikube \
+https://storage.googleapis.com/minikube/releases/v1.12.0/minikube-linux-amd64 && \
+chmod +x minikube && \
+mv minikube /usr/local/bin/
+
+curl -Lo kubectl \ 
+http://storage.googleapis.com/kubernetes-release/release/v1.18.0/bin/linux/amd64/kubectl && chmod +x kubectl && \
+mv kubectl /usr/local/bin/
+
+##
+curl -Lo minikube \
+https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && \
+chmod +x minikube && \
+mv minikube /usr/local/bin/
+
+##
+curl -Lo kubectl \ 
+http://storage.googleapis.com/kubernetes-release/release/latest/bin/linux/amd64/kubectl && chmod +x kubectl && \
+mv kubectl /usr/local/bin/
+
+
+[ 쿠버네티스 클러스터 설치 kubeadm으로 설치 ]
+
+1) Swap disabled
+# swapoff -a && sed -i '/swap/s/^/#/' /etc/fstab
+
+# 쿠버네티스 저장소 추가 - 모든 노드에
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+cat <<EOF > /etc/apt/sources.list.d/kubernetes.list
+deb http://apt.kubernetes.io /kubernetes-xenial main
+EOF
+
+# 도커 설치 - 모든 노드에
+wget -qO- get.docker.com | sh
+
+# 쿠버네티스 필요 패키지 내려받기 - 모든 노드에
+apt-get install -y kubelet kubeadm kubectl kubernetes-cni
+
+# 쿠버네티스 클러스터 초기화
+kubeadm init --apiserver-advertise-address ~~ \   = 마스터 노드의 API server 주소를 설정 할때 사용, 워커노드들은 이 아이피로 마스터 노드와 통신--pod-network-cidr= ~~
+
+
+★★ 마스터, 워커 노드 구성 전 확인
+호스트 네트워크 관리자 -->
+수동으로 어댑터 설정 = 게이트웨이DHCP서버 사용 체크 --> 최저 주소 한계 enp0s8에 순차적 부여 ex) node1 = xx.102, node2 = xx.103, node3 = xx.104
+
+enp0s8를 각 ipv4에서 수동 변경 및 확인
+vi /etc/ssh/sshd_config 에서 주석해제
+port 22, 
+ListenAddress 0.0.0.0 -> 모든 ip가 접속할수있게 변경
+---> service ssh restart
+netstat -nlpt로 22번 포트 열렸는지 확인
+ufw allow ssh
+ufw disable
+
+===== 쿠버네티스 전체 설치 과정 =====
+0. 도커 설치 ~~
+
+ 
+[1. kubeadm, kubectl, kubelet 동작 설정] - 모든 노드
+1) Swap disabled 해주기
+swapoff -a && sed -i '/swap/s/^/#/' /etc/fstab
+
+2) Letting iptables see bridged traffic 하기
+cat <<EOF > /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+EOF
+sysctl --system
+
+3) Disable firewall 하기
+ufw disable
+-----
+
+[2.설치]
+kubeadm = 쿠버네티스 전체 관리,운영
+kubelet = 쿠버네티스 컨테이너를 조작해주고 마스터와 통신할때 사용하는 데몬 
+kubectl = 명령어 쓸때 사용
+apt-get update
+apt-get install -y apt-transport-https ca-certificates curl
+curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list
+apt-get update
+apt-get install -y kubelet kubeadm kubectl
+apt-mark hold kubelet kubeadm kubectl
+
+systemctl start kubelet
+systemctl enable kubelet
+
+[3.control-plane node 마스터에서만 실행]
+
+kubeadm init  #마스터에 ectd,schduler,controller 구성@@@ 에러시 kubeadm reset -- cgroup?
+
+토큰 저장 ex)  >>kubeadm join 10.0.2.15:6443 --token 8hty4e.lx5frtzua1tyudi5 \
+        --discovery-token-ca-cert-hash sha256:b186190189612e335ce19b4246f07cc2a27b44b9c2d8c8fa14d723db5f93b2de
+
+  mkdir -p $HOME/.kube
+  cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  chown $(id -u):$(id -g) $HOME/.kube/config
+
+kubectl get nodes
+
+[4. 워커노드도 진행]
+모든 워커노드에 마스터노드에서 생성했던 토큰 붙여넣기
+kubeadm join 10.0.2.15:6443 --token 8hty4e.lx5frtzua1tyudi5 \
+        --discovery-token-ca-cert-hash sha256:b186190189612e335ce19b4246f07cc2a27b44b9c2d8c8fa14d723db5f93b2de
+
+++ vi에서 %s/바꿈 당하는 단어/새로운 단어 이렇게 하면 파일의 단어가 바뀐다.
+
+
+[ vi 편집기 돌아가기 ]
+fg
+
+[ vi 명령 취소 ]
+u
+
+[ vi 첫째줄 ]
+g
+
+[vi 편집기 전체선택 ]
+shift + v + g
+
+[[[ centos ]]
+
+vi /etc/sysconfig/network-scripts/ifcfg-en~~
+
+yum update
+iyum 
+yum -y install openssh-server openssh-clients openssh-askpass
+
+
+
