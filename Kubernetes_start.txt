@@ -1,6 +1,6 @@
 
 [도커 실행]
-stemctl daemon-reload
+systemctl daemon-reload
 
 systemctl enable --now docker
 
