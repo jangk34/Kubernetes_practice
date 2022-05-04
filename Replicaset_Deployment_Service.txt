@@ -1,0 +1,140 @@
+[ 쿠버네티스 master / worker 복습 ]
+
+Master 노드는 매우 중요하지만, 실제로 연산하는 양이 많지는 않기때문에, 리소스를 크게 잡아먹지 않습니다.
+
+Worker 노드는 실제 애플리케이션 작업을 수행하기 때문에 많은 리소스를 할당해야합니다.
+
+Worker 노드가 많아질수록, Master 노드에 가해지는 부하가 증가하기때문에, 적당한 비율로 같이 늘려가야합니다. (2 Master, 3 Worker -> 3 Master, 6 Worker)
+
+쿠버네티스 클러스터는 마스터노드에서 포드 생성시 api server를 통해 워커노드에 포드 컨테이너를 생성/실행 해줌
+
+[[[ replicaset ]]] = 포드를 관리, ★일정 개수의 포드를 유지하는것이 목적
+
+정해진 수의 동일한 포드가 항상 실행되도록 관리
+노드 장애의 경우 다른 노드에서 포드를 다시 생성
+
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: replicaset-nginx
+spec:                                  # 동일한 포드를 몇개 유지시킬지 설정 
+  replicas: 3				# 3개의 포드 
+  selector:
+    matchLabels:
+      app: my-nginx-pods-label          # ★만약 같은 이름의 라벨을 가진 포드가 이미 존재한다면 위의 3개를 생성할때 2개만 생성
+                                                    ---> 이후 위의 이미 존재한 포드를 삭제한다면 같은 라벨의 새로운 포드 자동 생성
+template:                              # 이하는 포드 스펙 설정 : 어떠한 포드를 사용할지
+    metadata:
+      name: my-nginx-pod 
+      labels: 
+        app: my-nginx-pods-label
+    spec:                                                    
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+
+-----------
+[ replicaset 정보 얻기 ]
+kubectl get replicaset  = 레플리카셋 정보 조회
+
+[ 라벨명 포함 출력 ]
+kubectl get pods --show-labels 
+
+[ 원하는 리소스만 출력 ]
+ex) kubectl get pods -l "app명" 
+
+[ 편집 ]
+kubectl edit pods ~~
+
+[ deployment  replicaset  pod  삭제 시 ]
+kubectl delete -f " " 모든 레플리카셋 포드 디플로이먼트 삭제
+kubectl delete rs " " 특정 레플리카셋 포드 디플로이먼트 삭제
+kubectl delete pods " " 하나의 포드만 삭제
+
+[  replicaset  - 네임스페이스 ]
+레플리카셋이라는 (오브젝트)리소스가 있는 네임스페이스(격리된 내부 공간)에 여러 pod생성시 
+pod들은 같은 네임스페이스 공간에 있기 때문에 동일한 이름을 가질 수 없어서 5자리의 랜덤문자로 나타냄
+
+쿠버네티스 네임스페이스 개념
+-리소스 격리 공간 -> 격리를 하는 이유는 리소스별로 구분하기 쉽게 하기위해
+
+[[[ deployment ]]]
+디플로이먼트 생성 시 -> 레플리카셋 생성 -> 포드 생성
+
+[ deployment 사용이유 ]
+1. 레플리카셋 리비전
+2. 다양한 포드의 롤링 업데이트
+
+[ deployment 이미지 업데이트 ]
+kubectl set image deployment "포드명" nginx=nginx:1.11 --record = nignx 이미지를 nginx:1.11로 업데이트
+
+★deployment는 업데이트 시 새로운 replicaset 생성함, 이전의 replicaset 값은 삭제하지 않고 리비전(보존) 해둠
+
+kubectl get deployment = 디플로이먼트 정보 조회
+
+[ deployment 포드 갯수 조절 ]
+kubectl scale --replicas=? deployment "deployment명"
+
+[ deployment 보존(리비전)값 조회 ]
+kubectl rollout history deployment "해당 deployment 포드명"
+
+[ 리비전 되돌리기 ]
+kubectl rollout  undo deployment "해당 deployment 포드명" --to-revision=1 >>>> 1번 리비전으로 되돌리기
+
+[ pod(포드) 아이피 조회 ]
+kubectl get pods -o wide
+
+[[[ service ]]] = 포드를 연결하고 외부에 노출
+-ClusterIP타입 = 쿠버 내부에서만 포드들에 접근, 외부로 포드를 노출 X
+-NodePort타입 = 포드에 접근할 수 있는 포트를 클러스터의 모든 노드에 동일하게 개방, 외부에서 포드에 접근 O
+-LoadBalancer타입 = NodePort와 동일하지만 aws,gcp등과 같은 클라우드 플랫폼에서 사용, 외부에서 포드에 접근 O
+
+[service 정보얻기 ]
+kubectl get services
+
+------------------------------------------------
+
+[clusterip]
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: hostname-svc-clusterip
+spec:
+  ports:
+    - name: web-port
+      port: 8080                           # CLUSTERIP와 8080포트로 접근할수 있게 정의
+      targetPort: 80                       # 포드에 접근할 때 사용하는 포트를 정의
+  selector:                     #특정 라벨을 가지는 포드를 서비스와 연결하기 위해 정의
+    app: webserver  
+  type: ClusterIP
+
+---------------> 고유 클러스터 IP 할당 받음
+
+kubectl get svc ( or service ) -> 할당받은 ip정보 구할 수 있음
+
+[service로 포드에 접근 - clustip ]
+curl "할당받은 clusterip":8080 --silent | grep "특정문자"
+
+[service 삭제]
+kubectl delete svc "서비스 이름"
+
+[nodeport] = 서비스를 이용해 포드를 외부에 노출
+- clusterip 기능을 포함(할당받은 아이피를 통해 출력), 정리하자면 내부 네트워크와 외부 네트워크 양쪽에서 접근 가능
+- 외부의 경우 curl "각 내부 아이피":"포트번호" --silent | grep Hello 와 같이 연결해 출력
+
+[ pod,replicaset,deployment,node,svc 등 확장 명령어 ]
+-o wide
+
+[ externalTrafficPolicy ]
+-externalTrafficPolicy: Cluster = 모든 워커노드에서 랜덤 포트 개방 ( 네트워크 홉으로 인한 클라이언트의 ip 보존이 중요하지 않다면 사용 )
+-externalTrafficPolicy: Local = 포드가 위치한 노드만 랜덤 포트 ( node1? node2? ) 개방
+-트래픽의 분배를 결정
+
+[ externalname ]
+-서비스가 외부 도메인을 가리키도록 설정
+
+
+
