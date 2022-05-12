@@ -1,0 +1,5 @@
+
+[ 클러스터 특정 포트NotReady 일시 ]
+가 유형) 로그 파악 -> drain  
+나 유형) calico의 cni 연결상태 파악 -> kubeadm reset ( 일괄 )
+다 유형) kubelet restart
