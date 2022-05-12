@@ -18,7 +18,7 @@ Burstable 클래스 : limits값 > requests값
 포드 우선순위 : Guaranteed > Burstable > besteffort 
 포드의 메모리 사용률 
 
-
+----- 어드미션 컨트롤러 -----
 [ ResourceQuota ]
 특정 namespace에서 사용할 수 있는 자원 사용량의 합 제한
 네임스페이스에서 생성 할 수 있는 리소스(서비스,디플로먼트,컨피그맵 등) 개수를 제한 
