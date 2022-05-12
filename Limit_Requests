@@ -1,0 +1,50 @@
+[ 컨테이너 포드 사용량 제한 ]
+Limits   vs   Requests
+
+Limits : 해당 포드의 컨테이너가 최대로 사용할 수 있는 자원의 상한선
+Requests : 적어도 이 정도의 자원은 컨테이너에게 보장돼야 한다는 것을 명시
++ 자원의 오버커밋을 가능하게 만드는 기능 -> 전체 자원의 사용률 높임
+ex) 전체 1GB에서  A = 500MB, B = 500MB 분배후 사용시 안쓰는 컨테이너에서 쓰는 컨테이너에 더 많은 양 끌어 쓸수 있음 
+--> A = 750MB , B = 250M MB
+정리 : 포드의 컨테이너는 최대 Limit만큼의 자원을 사용할수 있지만, 최소한 Request만큼의 자원을 사용할 수 있도록 보장 받음
+정리 : 최소한 0.5 CPU만큼은 사용할 수 있지만(Requests), 유휴 CPU 자원이 있다면 최대 1 CPU까지 사용할 수 있다.(Limits)
+
+[ QOS : 쿠버네티스 포드 우선순위  ]
+Guaranteed 클래스 : requests 와 limits 값이 동일 -> 할당받은 자원을 문제 없이 사용
+besteffort 클래스 : requests 와 limits 설정 하지 않은 포드에 설정되는 클래스
+Burstable 클래스 : limits값 > requests값 
+
+포드 생성 주체는 래플리카샛
+포드 우선순위 : Guaranteed > Burstable > besteffort 
+포드의 메모리 사용률 
+
+
+[ ResourceQuota ]
+특정 namespace에서 사용할 수 있는 자원 사용량의 합 제한
+네임스페이스에서 생성 할 수 있는 리소스(서비스,디플로먼트,컨피그맵 등) 개수를 제한 
+
+[ LimitRange ]
+ResourceQuota 처럼 네임스페이스별 적용 가능, 자원 사용량을 기본적으로 제한 
+
+-------------------------
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: mem-limit-range
+spec:
+  limits:
+  - default:                # 1. 자동으로 설정될 기본 Limit 값
+      memory: 256Mi
+      cpu: 200m
+    defaultRequest:        # 2. 자동으로 설정될 기본 Request 값
+      memory: 128Mi
+      cpu: 100m
+    max:                   # 3. 자원 할당량의 최대값
+      memory: 1Gi
+      cpu: 1000m
+    min:                   # 4. 자원 할당량의 최소값
+      memory: 16Mi
+      cpu: 50m
+    type: Container        # 5. 각 컨테이너에 대해서 적용
+--------------------------
+
