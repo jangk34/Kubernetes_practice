@@ -6,6 +6,10 @@ kubeamdmd reset
 [마스터만]
 kube init 다시해주기, cni 확인 후 이상있을시 관련 파일 삭제 후 칼리고 재설치
 
+[init ipv4 오류시 ]
+echo '1' > /proc/sys/net/ipv4/ip_forward
+
+
 [다시 마스터,워커 노드 동일]
 systemctl daemon-reload
 systemctl enable --now docker
@@ -53,22 +57,3 @@ ex)
 kubeadm join 192.168.0.30:6443 –token ki4szr.t3wondaclij6d1a3
 –discovery-token-ca-cert-hash sha256:2370f0451342c6e4bd0d38f6c2511bda5c50374c85e9c09da28e12dd666d5987
 
-----------> 마스터에서 노드 연결 확인
-
-
-[ 클러스터 not ready / 컨테이너 containercreating 일시  확인 ]
-systemctl status kubelet
---> 네트워크 문제일 경우 cni 삭제 후 calico 재설치
-
-[ 칼리코 cni네트워크 관련 삭제 ]
-rm -rf /var/run/calico/
-rm -rf /var/lib/calico/
-rm -rf /etc/cni/net.d/
-rm -rf /var/lib/cni/
-
-[ calico 설치 ]
-curl -o https://docs.projectcalico.org/v3.9/manifests/calico.yaml
-sed s/192.168.0.0\\/16/20.96.0.0\\/12/g -i calico.yaml
-kubectl apply -f calico.yaml
-
-kubectl get pods --all-namespaces
