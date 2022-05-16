@@ -1,0 +1,5 @@
+[ 기본 컨텍스트 네임스페이스 변경으로 명령어 간소화 ]
+
+kubectl config set-context --current --namespace=my-namespace 
+
+ 
