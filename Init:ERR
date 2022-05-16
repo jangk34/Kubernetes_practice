@@ -1,0 +1,11 @@
+[ INIT:ERR ] = 도커 사용량 제한 오류일 가능성이 높음 
+
+1. 우선 describe와 logs로 문제점 확인 , 도커 사용량 제한 오류로 확인 될시 
+
+2. rm -rf ~/.docker 
+
+3. docker login
+
+4. cp .docker/config.json /var/lib/kubelet/config.json
+
+5. systemctl restart kubelet
