@@ -20,11 +20,11 @@ preferredDuringSchedulingIgnoredDuringExecution : 키-값 조건을 반드시 �
 topologyKey : 해당 라벨을 가지는 토폴로지 범위의 노드를 선택
 ( 모든 토폴로지는 반드시 하나의 노드로만 구성 )	
 
-[ Taitans ] - 노드에 포드가 스케줄링 되는것을 막음
+[ Taints ] - 노드에 포드가 스케줄링 되는것을 막음
 키=값 형태
 ex) kubectl taint nodes "노드명" key:effect
 
-[ taitan 효과 종류 ]
+[ taint 효과 종류 ]
 1) NoExecute : 다른 노드로 이동
 2) NoSchedule : 새로운 포드의 스케줄링 방지
 
