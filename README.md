@@ -28,3 +28,16 @@ crul = 서버와 통신할 수 있는 커맨드 명령어 툴. 웹개발에 매�
 3.  d = 전체 삭제
     y = 복사
     p = 붙여넣기
+
+[ git reset ] - 잘못된 커밋 되돌리기
+reset하고자하는 commit으로 돌아간 후(git log로 확인), 저장소는 해당 commit으로 재설정되고, 이후 commit을 전부 삭제
+
+명령어는 아래와 같이 사용한다.
+ 
+git reset [--option(hard/soft/mixed)] [commit]
+ 
+option : 
+
+--hard : 돌아간 커밋 이후의 변경 이력을 전부 삭제
+--soft : 변경 이력 삭제, 변경 내용은 남아있음, 인덱스 초기화(git add가 안되어 있는 상태)
+--mixed : 변경 이력 삭제, 변경 내용은 남이있음, 인덱스도 유지(git add까지 되어 있음) 
