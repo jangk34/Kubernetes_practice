@@ -1,8 +1,15 @@
-entOS7 vi상 한글 깨질때 ] 
+] CentOS7 vi상 한글 깨질때 ] 
 
 locale 
 
-localedef -c -i ko_KR -f UTF-8 ko_KR.UTF-8 
-localectl set-locale LANG=ko_KR.UTF-8
+1. putty 글씨체 돋움체, utf-8로 설정
+
+2. 편집기 linepagecode utf-8로 설정 
+
+3. vi /etc/locale.conf 에서 LANG=ko_KR.utf8 로 변경 
+
+같은 명령어 -> localectl set-locale LANG=ko_KR.utf8
+
+4. reboot
 
 
