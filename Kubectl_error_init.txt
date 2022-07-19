@@ -1,0 +1,12 @@
+[kubectl init]
+kubeadm init --pod-network-cidr=20.96.0.0/12 --apiserver-advertise-address=vm상 호스트 ip   ex) 10.0.2.18
+
+
+[cri error 뜨면서 init 실패시]
+rm /etc/containerd/config.toml
+systemctl restart containerd
+kubeadm init
+
+kubeadm reset 
+
+master join 진행 
