@@ -1,0 +1,19 @@
+# docker-desktop starting 에러 err 
+
+powershell terminal 에서 
+ 
+wsl --unregister docker-desktop-data
+wsl --unregister docker-desktop
+wsl --shutdown
+
+===> docker-desktop 재시작 
+
+# wsl2 The connection to the server localhost:8080 was refused 에러 err
+echo 'export KUBECONFIG="/mnt/c/Users/{{유저명}}/.kube/config"' >> ~/.bashrc
+source ~/.bashrc
+kubectl config view
+
+# wsl2 명령어 자동화 설정
+source <(kubectl completion bash)
+alias k=kubectl
+complete -F __start_kubectl k
