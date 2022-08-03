@@ -9,7 +9,6 @@ kube init 다시해주기, cni 확인 후 이상있을시 관련 파일 삭제 �
 [init ipv4 오류시 ]
 echo '1' > /proc/sys/net/ipv4/ip_forward
 
-
 [다시 마스터,워커 노드 동일]
 systemctl daemon-reload
 systemctl enable --now docker
@@ -21,6 +20,10 @@ systemctl enable --now kubelet
 ex)
 kubeadm join 192.168.0.30:6443 –token ki4szr.t3wondaclij6d1a3
 –discovery-token-ca-cert-hash sha256:2370f0451342c6e4bd0d38f6c2511bda5c50374c85e9c09da28e12dd666d5987
+
+curl https://docs.projectcalico.org/manifests/calico.yaml -O
+sed s/192.168.0.0\\/16/20.96.0.0\\/12/g -i calico.yaml
+kubectl apply -f calico.yaml
 
 ----------> 마스터에서 노드 연결 확인
 
@@ -44,19 +47,3 @@ curl https://docs.projectcalico.org/archive/v3.9/manifests/calico.yaml -O
 sed s/192.168.0.0\\/16/20.96.0.0\\/12/g -i calico.yaml
 
 kubectl apply -f calico.yaml
-
-[마스터만]
-kube init 다시해주기, cni 확인 후 이상있을시 관련 파일 삭제 후 칼리고 재설치
-
-[다시 마스터,워커 노드 동일]
-systemctl daemon-reload
-systemctl enable --now docker
-docker run hello-world
-systemctl enable --now kubelet
-
-[워커노드]
-발급받은 조인문구 입력
-ex)
-kubeadm join 192.168.0.30:6443 –token ki4szr.t3wondaclij6d1a3
-–discovery-token-ca-cert-hash sha256:2370f0451342c6e4bd0d38f6c2511bda5c50374c85e9c09da28e12dd666d5987
-
