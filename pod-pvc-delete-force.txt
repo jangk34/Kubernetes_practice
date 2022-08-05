@@ -1,7 +1,5 @@
-# pvc 강제 삭제
-kubectl pattch pvc pvc_name -p '{"metadata":{"finalizers":null}}'
-
-# pv 강제 삭제
+# pvc & pv 강제 삭제
+kubectl patch pvc pvc_name -p '{"metadata":{"finalizers":null}}'
 kubectl patch pv pv_name -p '{"metadata":{"finalizers":null}}'
 
 #pod 강제 삭제
