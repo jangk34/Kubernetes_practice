@@ -1,0 +1,16 @@
+[인그레스 사용시 필요]
+
+1. ingress = domain 혹은 path 부여
+2. ingress-controller = ingress 컨트롤하는 컨트롤러 
+
+ex) 
+IP:PORT/intermax/
+IP:PORT/intermax/RTM
+IP:PORT/intermax/Config
+
+단 nodeport설정시 위처럼 path마다 전부 설정해야함.. 그렇게 안하면 페이지 넘김 문제 발생, 페이지 디버그하면 볼수 있음 
+path 전부 설정안하고 ingress 사용하려면 LoadBalancer 사용해야함
+
+nodeport = 외부에서 접속해야할 경우
+clusterip = 내부에서만 이용할 경우
+
