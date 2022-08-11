@@ -1,0 +1,6 @@
+https://github.com/kubernetes/kubernetes/issues/110113
+
++
+
+kubectl create token [serviceaccount명] -n [namespace명]
+
