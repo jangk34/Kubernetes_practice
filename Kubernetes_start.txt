@@ -1,8 +1,11 @@
 
-# [도커 실행]
+# [도커&& 쿠버네티스 실행]
 systemctl daemon-reload
 
 systemctl enable --now docker
+
+systemctl enable --now kubelet
+
 
 # [ x509 에러시]
 unset KUBECONFIG
@@ -11,9 +14,30 @@ mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
+# [ 대시보드 실행 ]
 
-# [쿠버네티스 실행]
-systemctl enable --now kubelet
+https://github.com/kubernetes/kubernetes/issues/110113
 
-# [ 노드 조회 ]
-kubectl get nodes
++
+
+kubectl create token [serviceaccount명] -n [namespace명]
+
+ex) 
+1. dashboard 배포
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.3.1/aio/deploy/recommended.yaml
+
++ nodeport 설정 & apply 
+
+2. proxy 띄우기 
+ 
+3. serviceaccount & role  생성 
+
+4. kubectl get sa -n kube-system 으로 해당하는 네임스페이스의 서비스 어카운트를  찾아서 
+
+kubectl create token admin-user -n kube-system
+
+5. 포트포워딩후 https:// vm-host ip : nodeport number/
+
+
+
+
