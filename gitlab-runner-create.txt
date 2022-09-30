@@ -1,5 +1,7 @@
 
 [ gitlab-runner https crt 인증서 생성 및 적용 ]
+[ 참조 = https://docs.gitlab.com/runner/configuration/tls-self-signed.html#supported-options-for-self-signed-certificates-targeting-the-gitlab-server ]
+
 1. openssl s_client -showcerts -connect gitlab.com:443 -servername gitlab.com < /dev/null 2>/dev/null | openssl x509 -outform PEM > /etc/gitlab-runner/certs/gitlab.example.com.crt
 
 2. kubectl create namespace gitlab-runner
@@ -12,12 +14,10 @@
           helm uninstall -n gitlab-qa gitlab-runner
           helm upgrade --namespace gitlab-runner -f values.yaml gitlab-runner gitlab/gitlab-runner
 
-
 [ 네임스페이스 terminaling 강제삭제 ]
 kubectl get namespace "gitlab-runner" -o json \
   | tr -d "\n" | sed "s/\"finalizers\": \[[^]]\+\]/\"finalizers\": []/" \
   | kubectl replace --raw /api/v1/namespaces/"gitlab-runner"/finalize -f -
-
 
 *** 
 [ gitlab-ce server 설치 ] 
