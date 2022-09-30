@@ -1,0 +1,36 @@
+
+[ gitlab-runner https crt 인증서 생성 및 적용 ]
+1. openssl s_client -showcerts -connect gitlab.com:443 -servername gitlab.com < /dev/null 2>/dev/null | openssl x509 -outform PEM > /etc/gitlab-runner/certs/gitlab.example.com.crt
+
+2. kubectl create namespace gitlab-runner
+
+3. kubectl create secret generic gitlab-runner-crt -n gitlab-runner --from-file=/root/qa_ci_cd/manifests/gitlab.com.cert
+
+4. helm install --namespace gitlab-runner --create-namespace gitlab-runner -f values.yaml gitlab/gitlab-runner
+
+--기타  helm ls --all-namespaces
+          helm uninstall -n gitlab-qa gitlab-runner
+          helm upgrade --namespace gitlab-runner -f values.yaml gitlab-runner gitlab/gitlab-runner
+
+
+[ 네임스페이스 terminaling 강제삭제 ]
+kubectl get namespace "gitlab-runner" -o json \
+  | tr -d "\n" | sed "s/\"finalizers\": \[[^]]\+\]/\"finalizers\": []/" \
+  | kubectl replace --raw /api/v1/namespaces/"gitlab-runner"/finalize -f -
+
+
+*** 
+[ gitlab-ce server 설치 ] 
+
+[ gitlab-ce server 초기 root 계정 설정 ]
+
+gitlab-rails console -e production
+
+user = User.where(id:1).first
+
+user.password = 'admin1234'
+
+user.password_confirmation = 'admin1234'
+
+user.save!
+
