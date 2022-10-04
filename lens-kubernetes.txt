@@ -1,0 +1,3 @@
+[ proxy, x509 문제 ]
+
+kubectl config view --minify --raw
