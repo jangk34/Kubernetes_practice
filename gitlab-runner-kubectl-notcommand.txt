@@ -1,0 +1,4 @@
+[ ClusterRoleBinding create ]
+
+kubectl create clusterrolebinding gitlab-runner-binding --clusterrole=cluster-admin --serviceaccount=gitlab-runner:default
+
