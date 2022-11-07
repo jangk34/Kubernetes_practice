@@ -1,0 +1,5 @@
+# python3 api 연동후 py 실행시 serivceaccoint error
+# serviceaccount clusterrolebinding 생성 
+
+kubectl create clusterrolebinding default-admin --clusterrole cluster-admin --serviceaccount=default:default
+
