@@ -9,9 +9,9 @@ git config --global user.email "jangk34@naver.com"
 
 git commit -m "test"
 
-git branch "test"
+git branch "test"  # 브랜치 생성시 
 
-git checkout "test"
+git checkout "test"  # 만든 브랜치로 전환시 
 
 git push ~~
 
