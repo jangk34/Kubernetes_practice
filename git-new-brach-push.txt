@@ -1,0 +1,19 @@
+[ 특정 폴더에서 특정 브랜치 push ]
+
+git init 
+
+git config core.sparseCheckout true
+
+git config --global user.name "jangk34
+git config --global user.email "jangk34@naver.com"
+
+git commit -m "test"
+
+git branch "test"
+
+git checkout "test"
+
+git push ~~
+
+https://y00n-lee.tistory.com/39
+
