@@ -1,0 +1,22 @@
+###### scp 
+install -y scp
+
+[ 윈도우 -> 특정환경로컬]
+윈도우 CMD 창에서입력
+ex) scp C:\Users\jangk\Downloads\setup_imxmod_imxwsm\setup_imxmod_nginx_2211.03.bin root@10.10.103.130:/root/docker-compose/nginx_rhel8_6/etc
+
+[ 특정환경로컬 파일 -> 특정환경로컬 ]
+ex) scp root@10.10.103.130:/root/docker-compose/nginx_rhel8_6/etc/setup_imxmod_nginx_2211.03.bin root@10.10.103.78:/root/docker-compose
+
+[ 특정환경 경로파일  -> 윈도우 ]
+리눅스 로컬에서입력
+ex) scp scp /root/docker-compose/nginx_rhel8_6/etc/setup_imxmod_nginx_2211.03.bin user@10.10.102.217:'C:\Users\jangk\Desktop'
+
+[ 기타]
+scp -r 옵션은 디렉터리 단위 전송
+scp -p 는 ssh 포트 번호 22번이 아닌 변경시
+
+[ 참고 ]
+https://coconuts.tistory.com/343 
+
+https://vlans.me/14
