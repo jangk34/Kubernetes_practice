@@ -2,16 +2,22 @@
 
 git init 
 
-git config core.sparseCheckout true
+git branch "test"  # 브랜치 생성시
+
+git checkout "test"  # 만든 브랜치로 전환시
+
+#git config core.sparseCheckout true
+
+git remote add "깃주소"
+
+git remote -v
 
 git config --global user.name "jangk34
 git config --global user.email "jangk34@naver.com"
 
+git add .
+
 git commit -m "test"
-
-git branch "test"  # 브랜치 생성시 
-
-git checkout "test"  # 만든 브랜치로 전환시 
 
 git push ~~
 
