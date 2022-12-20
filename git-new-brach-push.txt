@@ -12,6 +12,8 @@ git remote add "깃주소"
 
 git remote -v
 
+## 삭제시  git remote remove origin
+
 git config --global user.name "jangk34
 git config --global user.email "jangk34@naver.com"
 
