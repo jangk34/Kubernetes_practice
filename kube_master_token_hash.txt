@@ -1,0 +1,12 @@
+[ 마스터 토큰 조회 ]
+kubeadm token list
+
+[ 마스터 토큰 생성 - 기간만료로 없을시  ]
+kubeadm token create
+
+[ hash 해시값 확인 ]
+openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'
+
+[ token, hash 값으로 워커노드에 join ]
+kubeadm join <192.168.0.10:6443> --token <Token 값> --discovery-token-ca-cert-hash sha256:<Hash 값>
+
