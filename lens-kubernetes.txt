@@ -1,3 +1,6 @@
 [ proxy, x509 문제 ]
 
 kubectl config view --minify --raw
+
+kubectl config view --minify --raw > config
+
