@@ -71,6 +71,10 @@ sudo yum update -y && yum install -y containerd.io
 sudo mkdir -p /etc/containerd
 sudo containerd config default > /etc/containerd/config.toml
 
+## sed는 밑의 init 실패시 init 진행후 변경 
+sed -i '/plugins."io.containerd.grpc.v1.cri".containerd.default_runtime.options/a\          SystemdCgroup = true' /etc/containerd/config.toml 
+
+
 # restart containerd
 sudo systemctl restart containerd
 sudo systemctl enable containerd
