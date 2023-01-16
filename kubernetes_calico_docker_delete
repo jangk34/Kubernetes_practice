@@ -1,0 +1,32 @@
+[ kubernetes 삭제 & calico삭제 포함 ]
+
+kubeadm reset
+
+systemctl stop kubelet
+systemctl stop docker 
+
+rm -rf /var/lib/cni/
+rm -rf /var/lib/kubelet/*
+rm -rf /var/lib/etcd/
+rm -rf /etc/cni/
+rm -rf /etc/kubernetes
+rm -rf ~/.kube
+rm -rf /var/run/calico/
+rm -rf /var/lib/calico/
+rm -rf /etc/cni/net.d/
+rm -rf /var/lib/cni/
+
+kubectl delete -f calico.yaml
+rm -rf calico.yaml
+
+yum remove kubeadm kubectl kubelet kubernetes-cni kube*
+yum autoremove
+
+[ docker 삭제 ]
+
+yum remove docker docker-common docker-selinux docker-engine 
+
+yum remove -y docker-ce docker-ce-cli
+
+rm -rf /var/lib/docker
+
