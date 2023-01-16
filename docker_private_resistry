@@ -44,6 +44,56 @@ disabled_plugins = ["cri"]
 
 4. systmectl restart containerd
 
+
+[ kubernetes 개인저장소(nexus) pull 실패시 확인 ]
+
+1. 해당 저장소 regcred secret 생성 여부
+
+2. kubectl patch serviceaccount default -n "특정네임스페이스" -p '{"imagePullSecrets": [{"name": "regcred"}]}' 여부
+
+
+[ configmap 권한 수정 ] - 보류 ( k8s1.22v )
+
+      volumes:
+        - name: jspd-license-volume
+          configMap:
+            name: xe-jspd-license
+            defaultMode: 420
+        - name: jspd-prop-volume
+          configMap:
+            name: xe-jspd-prop
+            defaultMode: 420
+        - name: xe-properties
+          configMap:
+            name: xe-config
+            defaultMode: 420
+      containers:
+        - name: xe
+          image: nexus.exem.xyz:5000/exem/xe-transaction
+          ports:
+            - name: view
+              containerPort: 8080
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: xe-version
+          env:
+            - name: TZ
+              value: Asia/Seoul
+            - name: JSPD_WAS_ID
+              value: '10'
+          resources: {}
+          volumeMounts:
+            - name: jspd-license-volume
+              readOnly: true
+              mountPath: /jspd/intermax/jspd/cfg/license.TRIAL_20230331.rts.key
+              subPath: license.TRIAL_20230331.rts.key
+            - name: jspd-prop-volume
+              readOnly: true
+              mountPath: /jspd/intermax/jspd/cfg/agent/jspd.prop
+              subPath: jspd.prop
+
+
 ******* 참고
 
 [plugins]
@@ -67,5 +117,4 @@ disabled_plugins = ["cri"]
         [plugins."io.containerd.grpc.v1.cri".registry.configs."nexus.exem.xyz:5000".auth]
           password = "fpwltmxmfl!"
           username = "registry"
-
 
