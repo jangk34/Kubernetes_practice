@@ -79,6 +79,17 @@ sed -i '/plugins."io.containerd.grpc.v1.cri".containerd.default_runtime.options/
 sudo systemctl restart containerd
 sudo systemctl enable containerd
 
+[ containerd 설정]
+
+sudo vi /etc/crictl.yaml
+
+runtime-endpoint: unix:///run/containerd/containerd.sock
+image-endpoint: unix:///run/containerd/containerd.sock
+timeout: 2
+debug: true
+pull-image-on-create: false
+
+
 [ 쿠버네티스 설치2 ]
 
 kubeadm init --pod-network-cidr=20.96.0.0/12 --apiserver-advertise-address=10.10.48.249
@@ -92,4 +103,3 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 curl https://docs.projectcalico.org/manifests/calico.yaml -O
 sed s/192.168.0.0\\/16/20.96.0.0\\/12/g -i calico.yaml
 kubectl apply -f calico.yaml
-
