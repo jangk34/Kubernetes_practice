@@ -1,0 +1,3 @@
+[ 실패이미지 컨테이너 접속 ] 
+docker run --rm --entrypoint /bin/bash -i -t jangk34/test:10
+
