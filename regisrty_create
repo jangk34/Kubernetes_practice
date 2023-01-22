@@ -1,0 +1,11 @@
+[ json파일 기반 생성 ]
+kubectl create secret generic regcred \
+    --from-file=.dockerconfigjson=/root/docker/daemon.json \
+    --type=kubernetes.io/dockerconfigjson
+
+또는 
+
+[ 기타  자격증명 생성 ]
+kubectl create secret docker-registry regcred --docker-server=<your-registry-server> --docker-username=<your-name> --docker-password=<your-pword> --docker-email=<your-email>
+
+
