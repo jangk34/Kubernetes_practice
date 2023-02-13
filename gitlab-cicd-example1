@@ -1,0 +1,184 @@
+image: docker:dind
+
+stages:
+  - getversion
+  - build
+  - package
+  - deploy
+  - jandi
+
+variables:
+  IMAGENAME: clouddb-agent
+  PACKAGE_ACCESS_TOKEN: glpat-SqMVrPi9zmvvW66FyHLD
+
+getversion-tags:
+  image: golang:1.19
+  stage: getversion
+  only:
+    - tags
+  script:
+    - echo "APP_VERSION=$CI_COMMIT_TAG" >> build.env
+    - PROD_VERSION=`echo ${CI_COMMIT_TAG} | cut -d. -f1`.`echo ${CI_COMMIT_TAG} | cut -d. -f2`
+    - echo "PROD_VERSION=$PROD_VERSION" >> build.env
+  artifacts:
+    expire_in: 300 seconds
+    reports:
+      dotenv: build.env
+
+getversion-release:
+  image: golang:1.19
+  stage: getversion
+  only:
+    - release/1.0
+    - release/1.1
+    - release/1.2
+    - release/1.3
+  variables:
+    BRANCH_PREFIX: release/
+  script:
+    - SUB_BRANCH=${CI_COMMIT_BRANCH#$BRANCH_PREFIX}
+    - echo "APP_VERSION=v$SUB_BRANCH-rc" >> build.env
+    - echo "PROD_VERSION=v$SUB_BRANCH" >> build.env
+  artifacts:
+    expire_in: 300 seconds
+    reports:
+      dotenv: build.env
+
+getversion-develop:
+  image: golang:1.19
+  stage: getversion
+  only:
+    - develop
+  script:
+    - echo "APP_VERSION=${CI_COMMIT_BRANCH}" >> build.env
+  artifacts:
+    expire_in: 300 seconds
+    reports:
+      dotenv: build.env
+
+build:
+  image: golang:1.19
+  stage: build
+  only:
+    - tags
+    - release/1.0
+    - release/1.1
+    - release/1.2
+    - release/1.3
+    - develop
+  script:
+    - go build -ldflags "-X 'main.Version=$APP_VERSION' -X 'main.CommitId=$CI_COMMIT_SHORT_SHA' -X 'main.BuildTime=$(date)'"
+    - go mod tidy
+    - echo "APP_VERSION=$APP_VERSION" >> build.env
+    - ./${IMAGENAME} version
+  artifacts:
+    expire_in: 300 seconds
+    paths:
+      - ${IMAGENAME}
+
+package:
+  stage: package
+  only:
+    - tags
+    - release/1.0
+    - release/1.1
+    - release/1.2
+    - release/1.3
+    - develop
+  script:
+    - docker build -t ${IMAGENAME} .
+    - docker tag ${IMAGENAME} maxgauge/${IMAGENAME}:${APP_VERSION}
+    - docker push maxgauge/${IMAGENAME}:${APP_VERSION}
+
+package-prod:
+  stage: package
+  only:
+    - tags
+  script:
+    - docker build -t ${IMAGENAME} .
+    - docker tag ${IMAGENAME} maxgauge/${IMAGENAME}:latest
+    - docker tag ${IMAGENAME} maxgauge/${IMAGENAME}:${PROD_VERSION}
+    - docker push maxgauge/${IMAGENAME}:latest
+    - docker push maxgauge/${IMAGENAME}:${PROD_VERSION}
+
+package-mfc:
+  stage: package
+  only:
+    - tags
+  before_script:
+    - apk update  && apk add git
+  script:
+    - git clone -b release/${PROD_VERSION#v} http://gitlab-ci-token:${PACKAGE_ACCESS_TOKEN}@gitlab.exem.xyz/saas/maxgauge-for-clouddb.git
+    - cd maxgauge-for-clouddb
+    - sed -i "/AGENT_VERSION/ c\AGENT_VERSION=${APP_VERSION}" ./.env
+    - sed -i "/clouddb-agent/ c\- clouddb-agent:${APP_VERSION}" ./README.md
+    - git add --all
+    - git config --global user.email "sjcheon@ex-em.com"
+    - git config --global user.name "${IMAGENAME}(CI/CD)"
+    - git commit -m "${IMAGENAME}(CI/CD) `date +'%Y-%m-%d %H:%M:%S'` " || true
+    - git push http://gitlab-ci-token:${PACKAGE_ACCESS_TOKEN}@gitlab.exem.xyz/saas/maxgauge-for-clouddb.git HEAD:release/${PROD_VERSION#v}
+    - git tag -f ${PROD_VERSION}.`date +%Y%m%d`
+    - git push -f origin ${PROD_VERSION}.`date +%Y%m%d`
+
+deploy-in-cluster:
+  stage: deploy
+  image: alpine:3.9
+  only:
+    - develop
+  before_script:
+    - apk update  && apk add --no-cache curl
+    - curl -sSL https://storage.googleapis.com/kubernetes-release/release/v1.19.2/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl
+    - chmod +x /usr/local/bin/kubectl
+    - kubectl version
+    - mkdir -p $HOME/.kube
+    - cp $KUBE_CONFIG $HOME/.kube/config
+  script:
+    - kubectl set env statefulset/clouddb-agent CI_PIPELINE_ID=$CI_PIPELINE_ID -n $KUBE_NAMESPACE
+    - kubectl set image statefulset/clouddb-agent ${IMAGENAME}=maxgauge/${IMAGENAME}:${APP_VERSION} -n $KUBE_NAMESPACE
+
+deploy-nexus:
+  stage: deploy
+  only:
+    - tags
+    - release/1.0
+    - release/1.1
+    - release/1.2
+    - release/1.3
+  before_script:
+    - apk add --update --no-cache openssh-client-default sshpass curl tar
+  script:
+    - docker pull maxgauge/${IMAGENAME}:${APP_VERSION}
+    - docker save -o image-${IMAGENAME}-${APP_VERSION}.tar maxgauge/${IMAGENAME}:${APP_VERSION}
+    - gzip < image-${IMAGENAME}-${APP_VERSION}.tar > image-${IMAGENAME}-${APP_VERSION}.tar.gz
+    - curl -v -u ${NEXUS_USERNAME}:${NEXUS_PASSWORD} --upload-file image-${IMAGENAME}-${APP_VERSION}.tar.gz http://${NEXUS_SERVER}/repository/${NEXUS_REPOSITORY}/mfc/${PROD_VERSION}/images/agent/image-${IMAGENAME}-${APP_VERSION}.tar.gz
+
+deploy-nexus-standalone:
+  stage: deploy
+  only:
+    - tags
+  before_script:
+    - apk add --update --no-cache openssh-client-default sshpass curl tar
+  script:
+    - chmod +x -R ../clouddb-agent/standalone
+    - mv ${IMAGENAME} ../clouddb-agent/standalone
+    - mv ../clouddb-agent/standalone ../clouddb-agent/clouddb-agent
+    - tar -zcvf package-${IMAGENAME}-${APP_VERSION}.tar.gz ../clouddb-agent/clouddb-agent
+    - curl -v -u ${NEXUS_USERNAME}:${NEXUS_PASSWORD} --upload-file package-${IMAGENAME}-${APP_VERSION}.tar.gz http://${NEXUS_SERVER}/repository/${NEXUS_REPOSITORY}/mfc/${PROD_VERSION}/package/standalone/package-${IMAGENAME}-${APP_VERSION}.tar.gz
+
+deploy-nexus-standalone-rc:
+  stage: deploy
+  only:
+    - release/1.0
+    - release/1.1
+    - release/1.2
+    - release/1.3
+  before_script:
+    - apk add --update --no-cache openssh-client-default sshpass curl tar
+  script:
+    - chmod +x -R ../clouddb-agent/standalone
+    - mv ${IMAGENAME} ../clouddb-agent/standalone
+    - mv ../clouddb-agent/standalone ../clouddb-agent/clouddb-agent
+    - tar -zcvf package-${IMAGENAME}-${APP_VERSION}.tar.gz ../clouddb-agent/clouddb-agent
+    - curl -v -u ${NEXUS_USERNAME}:${NEXUS_PASSWORD} --upload-file package-${IMAGENAME}-${APP_VERSION}.tar.gz http://${NEXUS_SERVER}/repository/${NEXUS_REPOSITORY}/mfc/${PROD_VERSION}/package/standalone/package-${IMAGENAME}-${APP_VERSION}.tar.gz
+
+
